@@ -1,0 +1,55 @@
+<openerp>
+  <data noupdate="1">
+    <record id="increment_config_window" model="ir.actions.act_window">
+      <field name="name">Config</field>
+      <field name="res_model">increment.config</field>
+      <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="increment_config_form_view" model="ir.ui.view">
+      <field name="name">Increment Config</field>
+      <field name="model">increment.config</field>
+      <field name="type">form</field>
+      <field name="arch" type="xml">
+        <form string="Salary Range Input">
+          <header>
+
+          </header>
+          <sheet>
+              <group>
+                  <field name="name"/>
+<!--                  <field name="maximum_wage"/>-->
+<!--                  <field name="maximum_wage_increment"/>-->
+              </group>
+              <notebook>
+                <page>
+                  <field name="increment_config_line_ids">
+                    <tree editable="bottom" options="{'no_create': True}">
+                      <field name="starting_range"/>
+                      <field name="ending_range"/>
+                      <field name="salary_increment"/>
+                      <field name="offset"/>
+                    </tree>
+                  </field>
+                </page>
+              </notebook>
+          </sheet>
+        </form>
+      </field>
+    </record>
+
+    <record id="increment_config_tree_view" model="ir.ui.view">
+      <field name="name">Increment Config Tree</field>
+      <field name="model">increment.config</field>
+      <field name="arch" type="xml">
+        <tree string="Config list">
+          <field name="name"/>
+        </tree>
+      </field>
+    </record>
+
+    <menuitem id="config_menu_category" name="Settings" parent="salary_increment_menu"/>
+    <menuitem action="increment_config_window" id="increment_config_menu_item" name="Increment Config" parent="config_menu_category"/>
+
+  </data>
+</openerp>

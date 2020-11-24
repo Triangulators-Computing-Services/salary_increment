@@ -1,0 +1,40 @@
+<openerp>
+  <data noupdate="1">
+    <record id="salary_config_window" model="ir.actions.act_window">
+      <field name="name">Salary Config</field>
+      <field name="res_model">salary.config</field>
+      <field name="view_mode">form</field>
+    </record>
+
+    <record id="salary_config_form_view" model="ir.ui.view">
+      <field name="name">Salary config</field>
+      <field name="model">salary.config</field>
+      <field name="type">form</field>
+      <field name="arch" type="xml">
+        <form edit="false" create="false" delete="false">
+          <header>
+
+          </header>
+          <sheet>
+              <group>
+                  <field name="name"/>
+              </group>
+              <group>
+                <field name="salary_config_line_ids">
+                  <tree editable="bottom" options="{'no_create': True}">
+                    <field name="starting_range"/>
+                    <field name="ending_range"/>
+                    <field name="salary_increment"/>
+                  </tree>
+                </field>
+              </group>
+          </sheet>
+        </form>
+      </field>
+    </record>
+
+
+    <menuitem action="salary_config_window" id="salary_config_menu_item" name="Config" parent="config_menu_category"/>
+
+  </data>
+</openerp>

@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_salary_increment_salary_increment,salary_increment.salary_increment,model_salary_increment_salary_increment,,1,0,0,0
