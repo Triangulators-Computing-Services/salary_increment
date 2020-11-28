@@ -15,9 +15,15 @@ class EfficiencyInput(models.Model):
 
     current_date = fields.Date.today()
 
-    increment_year = fields.Integer(string='Increment Year', size=4, required=True)
+    increment_year = fields.Char(string='Increment Year', readonly=True, invisible=True)
+    use_x_percent_benefit = fields.Boolean(string='Use 5 Year Benefit')
 
-    employee_ids = fields.One2many(comodel_name='employees.list', inverse_name='efficiency_input_id')
+    employee_ids = fields.One2many(comodel_name='employees.list', inverse_name='efficiency_input_id',
+                                   help='List of employees in the selected department up for increment\n\n '
+                                        'Deduct = Expected Increment - Actual Increment\n'
+                                        'Punishment Return: Amount from which the employee lost last year as deduct\n'
+                                        '2% Benefit: Amount issued to employees whi have served more than 5 years\n'
+                                        'Award: Amount issued to an employee by the company')
 
     increment_config = fields.Many2one('increment.config', string='Salary Increment Configuration', required=True)
 
@@ -26,6 +32,7 @@ class EfficiencyInput(models.Model):
     state = fields.Selection(
         [
             ("draft", "Draft"),
+            ("input", "Input"),
             ("awaiting_approval", "Awaiting Approval"),
             ("cancelled", "Cancelled"),
             ("approved", "Approved"),
@@ -38,6 +45,9 @@ class EfficiencyInput(models.Model):
 
     @api.multi
     def revert(self):
+        print (5 * "\n")
+        print (str(datetime.strptime(self.current_date, "%Y-%m-%d"))[:4])
+        print (5 * "\n")
         self.state = "draft"
 
     @api.multi
@@ -45,20 +55,24 @@ class EfficiencyInput(models.Model):
         for record in self.employee_ids:
             wage = record.contract_reference.wage
 
-            contract_date = datetime.strptime(record.contract_reference.date_start, "%Y-%m-%d")
-            current_date = datetime.strptime(self.current_date, "%Y-%m-%d")
+            if self.use_x_percent_benefit:
+                contract_date = datetime.strptime(record.contract_reference.date_start, "%Y-%m-%d")
+                current_date = datetime.strptime(self.current_date, "%Y-%m-%d")
 
-            delta = current_date - contract_date
-            diff = float(delta.days) / 365.25
+                delta = current_date - contract_date
+                diff = float(delta.days) / 365.25
 
-            if diff >= 5.00:
-                record.x_year_benefit = record.basic_wage * 0.02
+                if diff >= 5.00:
+                    record.x_year_benefit = record.basic_wage * 0.02
 
             for config in self.increment_config.increment_config_line_ids:
                 if config.starting_range <= wage < config.ending_range:
                     record.expected_salary_increment = ((wage * config.salary_increment) / 100) + config.offset
                 if config.starting_range != 0 and config.ending_range == 0:
                     if wage >= config.starting_range:
+                        record.expected_salary_increment = ((wage * config.salary_increment) / 100) + config.offset
+                if config.ending_range != 0 and config.starting_range == 0:
+                    if wage <= config.ending_range:
                         record.expected_salary_increment = ((wage * config.salary_increment) / 100) + config.offset
 
             if record.average_efficiency < 50:
@@ -82,13 +96,21 @@ class EfficiencyInput(models.Model):
     @api.multi
     def approve_increment(self):
         for record in self.employee_ids:
-            total_increment = record.actual_salary_increment + record.punishment_return + record.x_year_benefit
+            total_increment = record.actual_salary_increment + record.punishment_return + record.x_year_benefit + record.award
             record.contract_reference.wage += total_increment
 
         self.state = "approved"
 
     @api.multi
     def populate_employees(self):
+        # TODO unique constraint
+        # self.increment_year = str(datetime.strptime(self.current_date, "%Y-%m-%d"))[:4]
+        # for record in self:
+        #     if record.department == self.department and record.increment_year == self.increment_year:
+        #         raise Warning("This department has already been computed!\nPlease change the department")
+        #     else:
+        #         self.state = "input"
+
         if self.employee_ids:
             for record in self.employee_ids:
                 record.unlink()
@@ -147,7 +169,7 @@ class EfficiencyInput(models.Model):
         return super(EfficiencyInput, self).create(vals)
 
     @api.model
-    def unlink(self):
+    def unlink(self):  # FIXME unlink issue
         for record in self:
             if record.state not in ("draft", "awaiting_approval"):
                 raise Warning(_("You cannot delete a record that has been approved."))
@@ -164,7 +186,7 @@ class EmployeesList(models.Model):
     basic_wage = fields.Float(string='Basic Salary', readonly=True)
     employee_benefit = fields.Float(string='Employee Benefit', readonly=True)
     gross_salary = fields.Float(string='Gross Salary', readonly=True)
-    x_year_benefit = fields.Float(string='2% Benefit')
+    x_year_benefit = fields.Float(string='2% Benefit', readonly=True)
     efficiency_one = fields.Float(string='First assessment')
     efficiency_two = fields.Float(string='Second assessment')
     average_efficiency = fields.Float(string='Average Efficiency')
@@ -172,6 +194,7 @@ class EmployeesList(models.Model):
     actual_salary_increment = fields.Float(string='Actual Increment', readonly=True)
     deduct = fields.Float(string='Deduct', readonly=True)
     punishment_return = fields.Float(string='Punishment Return')
+    award = fields.Float(string='Award')
     remark = fields.Text(string='Remark')
 
     @api.onchange('efficiency_one', 'efficiency_two')

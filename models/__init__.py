@@ -1,1 +1,2 @@
-from . import efficiency_input, increment_config
+import efficiency_input
+import increment_config
