@@ -25,7 +25,6 @@
             </div>
               <group>
                 <group>
-<!--                  <field name="name" />-->
                   <field name="department" />
                   <field name="increment_config" />
                 </group>
@@ -50,6 +49,7 @@
                       <field name="deduct"/>
                       <field name="punishment_return"/>
                       <field name="x_year_benefit"/>
+                      <field name="remark"/>
                     </tree>
                   </field>
                 </page>

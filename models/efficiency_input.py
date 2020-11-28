@@ -172,6 +172,7 @@ class EmployeesList(models.Model):
     actual_salary_increment = fields.Float(string='Actual Increment', readonly=True)
     deduct = fields.Float(string='Deduct', readonly=True)
     punishment_return = fields.Float(string='Punishment Return')
+    remark = fields.Text(string='Remark')
 
     @api.onchange('efficiency_one', 'efficiency_two')
     def _calculate_average_efficiency(self):
